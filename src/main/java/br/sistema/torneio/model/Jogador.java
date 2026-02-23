@@ -8,8 +8,8 @@ import lombok.*;
 @RequiredArgsConstructor
 public class Jogador {
 
-    private int id;                   // incrementado automático
-    private @NonNull String nome;     // name.fullName
-    private @NonNull String nickname; // esports.player
+    private int id;
+    private @NonNull String nome;
+    private @NonNull String nickname;
 
 }
