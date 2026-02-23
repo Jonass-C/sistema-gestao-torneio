@@ -52,7 +52,8 @@ public class JogadorDAO implements DAO<Jogador> {
 
     @Override
     public void deletar(int id) {
-        String sql = "DELETE FROM jogador WHERE id = ?";
+        String sql = "DELETE FROM jogador " +
+                     "WHERE id = ?";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
@@ -86,7 +87,8 @@ public class JogadorDAO implements DAO<Jogador> {
 
     @Override
     public List<Jogador> listarTodos() {
-        String sql = "SELECT * FROM jogador";
+        String sql = "SELECT * " +
+                     "FROM jogador";
         List<Jogador> retorno = new ArrayList<>();
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
@@ -104,7 +106,6 @@ public class JogadorDAO implements DAO<Jogador> {
         }
     }
 
-    // pesquisar o nickname do jogador a partir de um trecho, com o LIKE;
     public List<Jogador> buscarNomeJogador(String pesquisa) {
         String sql = "SELECT * " +
                      "FROM jogador " +

@@ -23,7 +23,7 @@ public class InscricaoDAO {
     }
 
     public void inserir(Inscricao inscricao) {
-        String sql = "INSERT INTO Inscricao(id_torneio, id_jogador, colocacao_final) VALUES(?, ?, ?)";
+        String sql = "INSERT INTO inscricao(id_torneio, id_jogador, colocacao_final) VALUES(?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1,inscricao.getIdTorneio());
             stmt.setInt(2, inscricao.getIdJogador());
@@ -89,7 +89,8 @@ public class InscricaoDAO {
     }
 
     public List<Inscricao> listarRanking(int idTorneio) {
-        String sql = "SELECT i.colocacao_final, j.nickname FROM inscricao i " +
+        String sql = "SELECT i.id_jogador, i.colocacao_final, j.nickname " +
+                     "FROM inscricao i " +
                      "JOIN jogador j ON i.id_jogador = j.id " +
                      "WHERE i.id_torneio = ? AND i.colocacao_final IS NOT NULL " +
                      "ORDER BY i.colocacao_final ASC";
@@ -110,10 +111,10 @@ public class InscricaoDAO {
         }
     }
 
-    // listar jogadores do torneio
     public List<Jogador> listarPorTorneio(int idTorneio) {
         String sql = "SELECT * " +
-                     "FROM jogador j JOIN inscricao i ON j.id = i.id_jogador " +
+                     "FROM jogador j " +
+                     "JOIN inscricao i ON j.id = i.id_jogador " +
                      "WHERE i.id_torneio = ?";
         List<Jogador> retorno = new ArrayList<>();
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
@@ -139,11 +140,48 @@ public class InscricaoDAO {
                      "WHERE id_torneio = ?";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, idTorneio);
-            int inscritos = stmt.executeUpdate();
-            return inscritos;
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
         } catch (SQLException e) {
             Logger.getLogger(InscricaoDAO.class.getName()).log(Level.SEVERE, null, e);
             throw new SqlRuntimeException("Erro ao contar número de inscritos.", e);
+        }
+    }
+
+    public List<Object[]> listarHistoricoPorJogador(int idJogador) {
+        String sql = "SELECT t.id, t.nome, i.colocacao_final " +
+                     "FROM inscricao i " +
+                     "JOIN torneio t ON i.id_torneio = t.id " +
+                     "WHERE i.id_jogador = ?";
+
+        List<Object[]> historico = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idJogador);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int idTorneio = rs.getInt("id");
+                String nomeTorneio = rs.getString("nome");
+                String colocacaoFormatada = "Não finalizado";
+                if (rs.getObject("colocacao_final") != null) {
+                    int col = rs.getInt("colocacao_final");
+                    switch (col) {
+                        case 1: colocacaoFormatada = "1st"; break;
+                        case 2: colocacaoFormatada = "2nd"; break;
+                        case 3: colocacaoFormatada = "3-4th"; break;
+                        case 5: colocacaoFormatada = "5-8th"; break;
+                        case 9: colocacaoFormatada = "9-16th"; break; // Caso tenha Oitavas
+                        default: colocacaoFormatada = col + "º Lugar"; // Fallback de segurança
+                    }
+                }
+                historico.add(new Object[]{idTorneio, nomeTorneio, colocacaoFormatada});
+            }
+            return historico;
+        } catch (SQLException e) {
+            Logger.getLogger(InscricaoDAO.class.getName()).log(Level.SEVERE, null, e);
+            throw new SqlRuntimeException("Erro ao listar histórico do jogador.", e);
         }
     }
 

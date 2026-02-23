@@ -6,7 +6,6 @@ import br.sistema.torneio.model.Partida;
 import br.sistema.torneio.model.PartidaDTO;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -22,16 +21,11 @@ public class PartidaDAO implements DAO<Partida> {
 
     @Override
     public void inserir(Partida objeto) {
-        String sql = "INSERT INTO partida(id_fase, data, id_jogador1, id_jogador2) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO partida(id_fase, data, id_jogador1, id_jogador2) VALUES (?, CURRENT_DATE, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, objeto.getIdFase());
-            if (objeto.getData() != null) {
-                stmt.setTimestamp(2, java.sql.Timestamp.valueOf(objeto.getData()));
-            } else {
-                stmt.setNull(2, Types.TIMESTAMP);
-            }
-            stmt.setInt(3, objeto.getIdJogador1());
-            stmt.setInt(4, objeto.getIdJogador2());
+            stmt.setInt(2, objeto.getIdJogador1());
+            stmt.setInt(3, objeto.getIdJogador2());
             stmt.executeUpdate();
         } catch (SQLException e) {
             Logger.getLogger(PartidaDAO.class.getName()).log(Level.SEVERE, null, e);
@@ -62,7 +56,8 @@ public class PartidaDAO implements DAO<Partida> {
 
     @Override
     public void deletar(int id) {
-        String sql = "DELETE FROM partida WHERE id = ?";
+        String sql = "DELETE FROM partida " +
+                     "WHERE id = ?";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
@@ -129,36 +124,6 @@ public class PartidaDAO implements DAO<Partida> {
         }
     }
 
-    // listar as partidas por data específica
-    public List<Partida> listarPorData(LocalDateTime data) {
-        String sql = "SELECT * " +
-                     "FROM Partida " +
-                     "WHERE DATE(data) = ?";
-        List<Partida> retorno = new ArrayList<>();
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Partida partida = new Partida();
-                partida.setId(rs.getInt("id"));
-                partida.setIdFase(rs.getInt("id_fase"));
-                partida.setData(rs.getTimestamp("data").toLocalDateTime());
-                partida.setIdJogador1(rs.getInt("id_jogador1"));
-                partida.setIdJogador2(rs.getInt("id_jogador2"));
-                partida.setPontuacaoJogador1((Integer) rs.getObject("pontuacao_jogador1"));
-                partida.setPontuacaoJogador2((Integer) rs.getObject("pontuacao_jogador2"));
-                if (rs.getTimestamp("data") != null) {
-                    partida.setData(rs.getTimestamp("data").toLocalDateTime());
-                }
-                retorno.add(partida);
-            }
-            return retorno;
-        } catch (SQLException e) {
-            Logger.getLogger(PartidaDAO.class.getName()).log(Level.SEVERE, null, e);
-            throw new SqlRuntimeException("Erro ao listar Partidas do Torneio.", e);
-        }
-    }
-
-    // listar as partidas por torneio
     public List<PartidaDTO> listarPorTorneio(int idTorneio) {
         String sql = "SELECT p.id AS id_partida, p.data, " +
                      "j1.nickname AS nick_jogador1, j2.nickname AS nick_jogador2, " +
@@ -190,6 +155,48 @@ public class PartidaDAO implements DAO<Partida> {
         } catch (SQLException e) {
             Logger.getLogger(PartidaDAO.class.getName()).log(Level.SEVERE, null, e);
             throw new SqlRuntimeException("Erro ao listar partidas do torneio.", e);
+        }
+    }
+
+    public List<Partida> listarPorFase(int idFase) {
+        String sql = "SELECT * " +
+                     "FROM partida " +
+                     "WHERE id_fase = ?";
+        List<Partida> retorno = new ArrayList<>();
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idFase);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Partida partida = new Partida();
+                partida.setId(rs.getInt("id"));
+                partida.setIdFase(rs.getInt("id_fase"));
+                if (rs.getTimestamp("data") != null) {
+                    partida.setData(rs.getTimestamp("data").toLocalDateTime());
+                }
+                partida.setIdJogador1(rs.getInt("id_jogador1"));
+                partida.setIdJogador2(rs.getInt("id_jogador2"));
+                partida.setPontuacaoJogador1((Integer) rs.getObject("pontuacao_jogador1"));
+                partida.setPontuacaoJogador2((Integer) rs.getObject("pontuacao_jogador2"));
+                partida.setIdVencedor((Integer) rs.getObject("id_vencedor"));
+                retorno.add(partida);
+            }
+            return retorno;
+        } catch (SQLException e) {
+            Logger.getLogger(PartidaDAO.class.getName()).log(Level.SEVERE, null, e);
+            throw new SqlRuntimeException("Erro ao listar Partidas por Fase.", e);
+        }
+    }
+
+    public void deletarPorTorneio(int idTorneio) {
+        String sql = "DELETE FROM partida " +
+                     "WHERE id_fase IN (SELECT id " +
+                                       "FROM fase " +
+                                       "WHERE id_torneio = ?)";
+        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            stmt.setInt(1, idTorneio);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new SqlRuntimeException("Erro ao deletar partidas do torneio.", e);
         }
     }
 

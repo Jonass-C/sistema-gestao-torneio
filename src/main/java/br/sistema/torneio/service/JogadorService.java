@@ -9,13 +9,13 @@ import java.util.List;
 
 public class JogadorService {
 
-    private JogadorDAO jogadorDAO = new JogadorDAO();
+    private final JogadorDAO jogadorDAO = new JogadorDAO();
 
     public void inserir(Jogador jogador) {
-        if (!verificarNome(jogador.getNome())) {
+        if (!verificarTexto(jogador.getNome())) {
             throw new RegraDeNegocioException("O nome do jogador é obrigatório.");
         }
-        if (!verificarNickname(jogador.getNickname())) {
+        if (!verificarTexto(jogador.getNickname())) {
             throw new RegraDeNegocioException("O nickname do jogador é obrigatório.");
         }
         if (verificarNicknameRepetidos(jogador.getNickname())){
@@ -24,26 +24,29 @@ public class JogadorService {
         jogadorDAO.inserir(jogador);
     }
 
-    public void atualizar(Jogador jogador) {
-        if (!verificarId(jogador.getId())) {
-            throw new RegraDeNegocioException("ID de jogador inválido.");
-        }
-        Jogador jogadorAtualizar = jogadorDAO.buscarPorId(jogador.getId());
-        if (!verificarJogador(jogadorAtualizar)) {
+    public void atualizar(String idString, Jogador jogador) {
+        int id = converterEValidarId(idString);
+        jogador.setId(id);
+
+        Jogador jogadorAtualizar = buscarPorId(jogador.getId());
+        if (jogadorAtualizar == null) {
             throw new RegraDeNegocioException("Jogador não encontrado. Não é possível atualizar.");
         }
-        if (!verificarNome(jogador.getNome())) {
-            throw new RegraDeNegocioException("O novo nome do jogador é obrigatório.");
+        if (verificarTexto(jogador.getNome())) {
+            jogadorAtualizar.setNome(jogador.getNome());
         }
-        if (!verificarNickname(jogador.getNickname())) {
-            throw new RegraDeNegocioException("O novo nickname do jogador é obrigatório.");
+        if (verificarTexto(jogador.getNickname())) {
+            jogadorAtualizar.setNickname(jogador.getNickname());
         }
-        jogadorDAO.atualizar(jogador);
+
+        jogadorDAO.atualizar(jogadorAtualizar);
     }
 
-    public void deletar(int id) {
+    public void deletar(String idString) {
+        int id = converterEValidarId(idString);
+
         Jogador jogador = jogadorDAO.buscarPorId(id);
-        if (!verificarJogador(jogador)) {
+        if (jogador == null) {
             throw new RegraDeNegocioException("Jogador não encontrado.");
         }
         try {
@@ -54,9 +57,6 @@ public class JogadorService {
     }
 
     public Jogador buscarPorId(int id) {
-        if (!verificarId(id)) {
-            throw new RegraDeNegocioException("ID inválido.");
-        }
         return jogadorDAO.buscarPorId(id);
     }
 
@@ -65,27 +65,27 @@ public class JogadorService {
     }
 
     public List<Jogador> buscarNomeJogador(String pesquisa) {
-        if (pesquisa == null || pesquisa.trim().isEmpty()) {
-            throw new RegraDeNegocioException("Digite um termo para pesquisar.");
-        }
         return jogadorDAO.buscarNomeJogador(pesquisa);
     }
 
     // métodos auxiliares
-    private boolean verificarNome(String nome) {
-        return nome != null && !nome.trim().isBlank();
+    private int converterEValidarId(String idString) {
+        if (idString == null || idString.trim().isEmpty()) {
+            throw new RegraDeNegocioException("O ID não pode estar vazio.");
+        }
+        try {
+            int id = Integer.parseInt(idString.trim());
+            if (id <= 0) {
+                throw new RegraDeNegocioException("O ID deve ser um número maior que zero.");
+            }
+            return id;
+        } catch (NumberFormatException e) {
+            throw new RegraDeNegocioException("O ID deve ser numérico e não conter letras.");
+        }
     }
 
-    private boolean verificarNickname(String nickname) {
-        return nickname != null && !nickname.trim().isBlank();
-    }
-
-    private boolean verificarId(int id) {
-        return id > 0;
-    }
-
-    private boolean verificarJogador(Jogador jogador) {
-        return jogador != null;
+    private boolean verificarTexto(String texto) {
+        return texto != null && !texto.trim().isBlank();
     }
 
     private boolean verificarNicknameRepetidos(String nickname) {
@@ -97,4 +97,5 @@ public class JogadorService {
         }
         return false;
     }
+
 }

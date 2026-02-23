@@ -12,6 +12,7 @@ public class Torneio {
 
     private int id;                  // incrementado automático
     private @NonNull String nome;    // esports.event
-    private @NonNull LocalDate data; // Quando fizermos o TorneioService.criar(), faremos: novoTorneio.setData(LocalDate.now());.
+    private @NonNull LocalDate dataInicio; // Quando fizermos o TorneioService.criar(), faremos: novoTorneio.setData(LocalDate.now());.
+    private LocalDate dataTermino;
 
 }
