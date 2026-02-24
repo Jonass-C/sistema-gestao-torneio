@@ -23,6 +23,9 @@ public class TorneioService {
         if (torneio.getDataTermino() != null && torneio.getDataTermino().isBefore(torneio.getDataInicio())) {
             throw new RegraDeNegocioException("Data de término não pode ser anterior à data de início.");
         }
+        if (torneio.getDataInicio().isBefore(LocalDate.now())) {
+            throw new RegraDeNegocioException("Data de início não pode ser anterior a hoje.");
+        }
         if (verificarNomeRepetidos(torneio.getNome())) {
             throw new RegraDeNegocioException("Torneios não podem ter nomes repetidos.");
         }
