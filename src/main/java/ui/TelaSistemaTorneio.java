@@ -34,9 +34,6 @@ public class TelaSistemaTorneio extends JFrame {
     // Novos componentes para Jogador
     private JTable tabelaHistoricoJogador;
 
-    // Componentes de Resumo do Torneio
-    private JPanel painelBrackets;
-
     private JTextField campoBuscaJogador, campoBuscaTorneio;
     private JComboBox<String> comboFiltroTorneio;
     private JTabbedPane abas;
@@ -474,8 +471,6 @@ public class TelaSistemaTorneio extends JFrame {
         topo.add(new JLabel("Status:"));
         topo.add(comboFiltroTorneio);
         topo.add(btnBuscar);
-//        topo.add(Box.createHorizontalStrut(20));
-//        topo.add(btnBrackets);
 
         tabelaTorneios = new JTable();
         estilizarTabela(tabelaTorneios);
@@ -495,12 +490,6 @@ public class TelaSistemaTorneio extends JFrame {
         detalhes.add("Inscritos", new JScrollPane(tabelaJogadoresTorneio));
         detalhes.add("Partidas", new JScrollPane(tabelaPartidas));
         detalhes.add("Ranking", new JScrollPane(tabelaRanking));
-
-        // Aba Brackets (Chaves)
-        painelBrackets = new JPanel(new GridLayout(1, 4, 10, 10)); // Container para as chaves
-        painelBrackets.setBackground(new Color(50, 50, 50));
-        painelBrackets.setBorder(new EmptyBorder(10,10,10,10));
-        detalhes.add("Chaves (Brackets)", new JScrollPane(painelBrackets));
 
         detalhes.setPreferredSize(new Dimension(0, 300));
         p.add(detalhes, BorderLayout.SOUTH);
@@ -720,40 +709,6 @@ public class TelaSistemaTorneio extends JFrame {
         if (nome.equalsIgnoreCase("Final")) return 3;
 
         return 99;
-    }
-
-    private void mostrarBrackets() {
-        if (tabelaTorneios.getSelectedRow() == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um torneio primeiro.");
-            return;
-        }
-        int idTorneio = (int) tabelaTorneios.getValueAt(tabelaTorneios.getSelectedRow(), 0);
-
-        JDialog dialog = new JDialog(this, "Chaves do Torneio", true);
-        dialog.setSize(1000, 600);
-        dialog.setLocationRelativeTo(this);
-
-        JPanel container = new JPanel(new GridLayout(1, 4, 10, 10)); // 4 Colunas para as fases
-        container.setBorder(new EmptyBorder(20,20,20,20));
-        container.setBackground(new Color(50, 50, 50)); // Fundo escuro para bracket
-
-        // Pegar partidas e agrupar por fase
-        try {
-            List<PartidaDTO> partidas = partidaService.listarPorTorneio(idTorneio);
-
-            // Criar colunas
-            container.add(criarColunaBracket("Oitavas", partidas));
-            container.add(criarColunaBracket("Quartas", partidas));
-            container.add(criarColunaBracket("Semifinal", partidas));
-            container.add(criarColunaBracket("Final", partidas));
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
-            return;
-        }
-
-        dialog.add(new JScrollPane(container));
-        dialog.setVisible(true);
     }
 
     private JPanel criarColunaBracket(String nomeFase, List<PartidaDTO> todasPartidas) {
