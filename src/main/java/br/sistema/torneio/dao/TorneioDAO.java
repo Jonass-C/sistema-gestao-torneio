@@ -157,14 +157,14 @@ public class TorneioDAO implements DAO<Torneio> {
                      "FROM torneio t " +
                      "WHERE data_inicio <= CURRENT_DATE " +
                      "AND (data_termino >= CURRENT_DATE OR data_termino IS NULL) " +
-                     "AND t.id NOT IN(SELECT t2.id " +
+                     "AND (t.id NOT IN(SELECT t2.id " +
                                      "FROM torneio t2, fase f, partida p " +
                                      "WHERE p.id_fase = f.id AND f.id_torneio = t.id " +
                                      "AND f.nome_fase = 'Final' AND p.id_vencedor IS NOT NULL) " +
-                     "AND (SELECT COUNT(*) " +
+                     "OR (SELECT COUNT(*) " +
                           "FROM inscricao i " +
                           "WHERE i.id_torneio = t.id" +
-                          ") < 8 " +
+                          ") < 8 )" +
                      "ORDER BY data_inicio ASC";
         List<Torneio> retorno = new ArrayList<>();
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {

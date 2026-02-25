@@ -21,7 +21,7 @@ public class PartidaDAO implements DAO<Partida> {
 
     @Override
     public void inserir(Partida objeto) {
-        String sql = "INSERT INTO partida(id_fase, data, id_jogador1, id_jogador2) VALUES (?, CURRENT_DATE, ?, ?)";
+        String sql = "INSERT INTO partida(id_fase, id_jogador1, id_jogador2) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
             stmt.setInt(1, objeto.getIdFase());
             stmt.setInt(2, objeto.getIdJogador1());

@@ -39,9 +39,6 @@ public class PartidaService {
         if (existente == null) {
             throw new RegraDeNegocioException("Partida não encontrada.");
         }
-        if (existente.getIdVencedor() != null) {
-            throw new RegraDeNegocioException("Essa partida já foi finalizada e não pode ser alterada.");
-        }
 
         partidaDAO.atualizar(partida);
     }
